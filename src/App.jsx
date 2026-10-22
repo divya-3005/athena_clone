@@ -345,6 +345,7 @@ export default function App() {
             {/* View 4: Python Coding Problem Workspace with Live Timer */}
             {stage === 'exam_coding' && (
                 <CodingWorkspace
+                    remainingSeconds={remainingSeconds}
                     onSubmitCoding={handleSubmitCoding}
                     onOpenRules={() => window.athena?.showRules?.()}
                     onOpenDiagnostics={() => setShowDiagnosticsModal(true)}

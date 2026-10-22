@@ -28,13 +28,27 @@ function createWindow() {
         minWidth: 1024,
         minHeight: 720,
         title: "Athena | Secure Proctoring Desktop Environment",
-        backgroundColor: "#090d16",
+        backgroundColor: "#f8fafc",
         webPreferences: {
             devTools: true,
             preload: path.join(import.meta.dirname, "preload.js"),
             contextIsolation: true,
-            nodeIntegration: false
+            nodeIntegration: false,
+            webSecurity: false
         }
+    });
+
+    electronWindow.webContents.on('did-fail-load', (_event, errorCode, errorDescription, validatedURL) => {
+        console.error(`[Athena Main] did-fail-load: ${validatedURL} [${errorCode}] ${errorDescription}`);
+        const distPath = path.join(import.meta.dirname, "../dist/index.html");
+        if (validatedURL.startsWith("http://") && fs.existsSync(distPath)) {
+            console.log("[Athena Main] Falling back to local dist/index.html");
+            electronWindow.loadFile(distPath);
+        }
+    });
+
+    electronWindow.webContents.on('console-message', (_event, _level, message) => {
+        console.log(`[Athena Renderer]: ${message}`);
     });
 
     session.defaultSession.setDisplayMediaRequestHandler(
@@ -55,12 +69,12 @@ function createWindow() {
 
     // Try loading Vite dev server first; fall back to dist/index.html if offline/packaged
     const devServerUrl = "http://localhost:5173";
-    fetch(devServerUrl)
+    const distPath = path.join(import.meta.dirname, "../dist/index.html");
+    fetch(devServerUrl, { signal: AbortSignal.timeout(1200) })
         .then(() => {
             electronWindow.loadURL(devServerUrl);
         })
         .catch(() => {
-            const distPath = path.join(import.meta.dirname, "../dist/index.html");
             if (fs.existsSync(distPath)) {
                 electronWindow.loadFile(distPath);
             } else {

@@ -4,6 +4,7 @@ import { Play, Send, RotateCcw, CheckCircle2, XCircle, AlertCircle, Code2, Termi
 import { CODING_PROBLEM } from '../data/examQuestions';
 
 export default function CodingWorkspace({
+    remainingSeconds = 600,
     onSubmitCoding,
     onOpenRules,
     onOpenDiagnostics
@@ -14,6 +15,13 @@ export default function CodingWorkspace({
     const [testResults, setTestResults] = useState(null);
     const [activeTab, setActiveTab] = useState('testcases');
     const [errorMessage, setErrorMessage] = useState(null);
+
+    function formatTime(totalSeconds) {
+        const secs = Math.max(0, Math.floor(totalSeconds || 0));
+        const mm = String(Math.floor(secs / 60)).padStart(2, '0');
+        const ss = String(secs % 60).padStart(2, '0');
+        return `${mm}:${ss}`;
+    }
 
     // Fallback runner if running outside Electron
     function runCodeFallback(codeToRun, tests) {
@@ -223,7 +231,7 @@ export default function CodingWorkspace({
                             fontFamily: 'var(--font-mono)'
                         }}>
                             <Clock size={13} />
-                            <span>{Math.floor(remainingSeconds / 60).toString().padStart(2, '0')}:{(remainingSeconds % 60).toString().padStart(2, '0')} remaining</span>
+                            <span>{formatTime(remainingSeconds)} remaining</span>
                         </div>
                     </div>
 
