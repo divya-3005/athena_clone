@@ -1,14 +1,12 @@
 // src/components/ReadinessCheck.jsx
 import React, { useState } from 'react';
-import { Camera, Maximize, Check, ChevronDown, Folder, FileText } from 'lucide-react';
+import { Camera, Maximize, Check, ChevronDown, Folder, FileText, CheckCircle2, Code2, BookOpen } from 'lucide-react';
 
 export default function ReadinessCheck({
-    title = "Exam readiness check",
-    subtitle = "Camera and full screen must be turned on before the exam can begin.",
-    buttonLabel = "Begin exam",
-    badgeLabel = "Readiness Check",
     cameraEnabled,
     fullScreen,
+    selectedSection = 'mcq',
+    onSelectSection,
     onGetCameraAccess,
     onEnableFullScreen,
     onStartExam,
@@ -18,26 +16,81 @@ export default function ReadinessCheck({
     const allChecksReady = cameraEnabled && fullScreen;
 
     return (
-        <div style={{ maxWidth: '640px', margin: '0 auto', padding: '56px 20px 48px' }}>
+        <div style={{ maxWidth: '680px', margin: '0 auto', padding: '48px 20px 48px' }}>
             {/* Header */}
-            <div style={{ marginBottom: '28px' }}>
-                <div style={{ marginBottom: '8px' }}>
-                    <span className="badge badge-neutral" style={{ fontSize: '12px' }}>
-                        {badgeLabel}
-                    </span>
-                </div>
+            <div style={{ marginBottom: '24px' }}>
                 <h1 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text)', marginBottom: '8px' }}>
-                    {title}
+                    Exam readiness &amp; section choice
                 </h1>
                 <p style={{ fontSize: '15px', color: 'var(--text-muted)', lineHeight: '1.5' }}>
-                    {subtitle}
+                    Verify camera and full screen, then choose which section you want to do first.
                 </p>
             </div>
 
+            {/* Feature: Choose what you want to do first */}
+            <div className="card" style={{ padding: '20px', marginBottom: '20px' }}>
+                <h3 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text)', marginBottom: '12px' }}>
+                    Choose which part to do first:
+                </h3>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                    {/* Option A: MCQs */}
+                    <div
+                        onClick={() => onSelectSection && onSelectSection('mcq')}
+                        style={{
+                            padding: '16px',
+                            borderRadius: '8px',
+                            border: `2px solid ${selectedSection === 'mcq' ? 'var(--primary)' : 'var(--border)'}`,
+                            background: selectedSection === 'mcq' ? 'var(--primary-bg)' : '#ffffff',
+                            cursor: 'pointer',
+                            transition: 'all 0.15s ease'
+                        }}
+                    >
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600, fontSize: '14px', color: selectedSection === 'mcq' ? 'var(--primary)' : 'var(--text)' }}>
+                                <BookOpen size={16} />
+                                Part 1: MCQs
+                            </div>
+                            {selectedSection === 'mcq' && (
+                                <CheckCircle2 size={16} color="var(--primary)" />
+                            )}
+                        </div>
+                        <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
+                            12 Multiple Choice Questions (10-minute timer). Choose any question to start with.
+                        </div>
+                    </div>
+
+                    {/* Option B: Python Coding */}
+                    <div
+                        onClick={() => onSelectSection && onSelectSection('coding')}
+                        style={{
+                            padding: '16px',
+                            borderRadius: '8px',
+                            border: `2px solid ${selectedSection === 'coding' ? 'var(--primary)' : 'var(--border)'}`,
+                            background: selectedSection === 'coding' ? 'var(--primary-bg)' : '#ffffff',
+                            cursor: 'pointer',
+                            transition: 'all 0.15s ease'
+                        }}
+                    >
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600, fontSize: '14px', color: selectedSection === 'coding' ? 'var(--primary)' : 'var(--text)' }}>
+                                <Code2 size={16} />
+                                Part 2: Python Coding
+                            </div>
+                            {selectedSection === 'coding' && (
+                                <CheckCircle2 size={16} color="var(--primary)" />
+                            )}
+                        </div>
+                        <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
+                            1 Python coding problem with input/output, sample tests, and Run/Submit buttons.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             {/* Checklist Card */}
-            <div className="card" style={{ padding: '8px 24px', marginBottom: '28px' }}>
+            <div className="card" style={{ padding: '8px 24px', marginBottom: '24px' }}>
                 {/* 1. Camera */}
-                <div style={{ display: 'flex', gap: '16px', padding: '24px 0', borderBottom: '1px solid var(--border)' }}>
+                <div style={{ display: 'flex', gap: '16px', padding: '20px 0', borderBottom: '1px solid var(--border)' }}>
                     <div style={{
                         width: '40px',
                         height: '40px',
@@ -53,11 +106,11 @@ export default function ReadinessCheck({
                     </div>
 
                     <div style={{ flex: 1 }}>
-                        <h3 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '4px' }}>
+                        <h3 style={{ fontSize: '15px', fontWeight: 600, marginBottom: '2px' }}>
                             Camera
                         </h3>
-                        <p style={{ fontSize: '14px', color: 'var(--text-muted)', marginBottom: '16px' }}>
-                            Used to verify your identity during the assessment.
+                        <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '12px' }}>
+                            Used to verify identity during the assessment.
                         </p>
 
                         <div>
@@ -66,7 +119,7 @@ export default function ReadinessCheck({
                                     <Check size={14} /> Camera connected
                                 </span>
                             ) : (
-                                <button className="btn btn-primary" onClick={onGetCameraAccess}>
+                                <button className="btn btn-primary btn-sm" onClick={onGetCameraAccess}>
                                     Allow camera access
                                 </button>
                             )}
@@ -75,7 +128,7 @@ export default function ReadinessCheck({
                 </div>
 
                 {/* 2. Fullscreen */}
-                <div style={{ display: 'flex', gap: '16px', padding: '24px 0' }}>
+                <div style={{ display: 'flex', gap: '16px', padding: '20px 0' }}>
                     <div style={{
                         width: '40px',
                         height: '40px',
@@ -91,10 +144,10 @@ export default function ReadinessCheck({
                     </div>
 
                     <div style={{ flex: 1 }}>
-                        <h3 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '4px' }}>
+                        <h3 style={{ fontSize: '15px', fontWeight: 600, marginBottom: '2px' }}>
                             Full screen
                         </h3>
-                        <p style={{ fontSize: '14px', color: 'var(--text-muted)', marginBottom: '16px' }}>
+                        <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '12px' }}>
                             Stays on for the entire session to minimize distractions.
                         </p>
 
@@ -104,7 +157,7 @@ export default function ReadinessCheck({
                                     <Check size={14} /> Full screen locked in
                                 </span>
                             ) : (
-                                <button className="btn btn-primary" onClick={onEnableFullScreen}>
+                                <button className="btn btn-primary btn-sm" onClick={onEnableFullScreen}>
                                     Switch to full screen
                                 </button>
                             )}
@@ -114,7 +167,7 @@ export default function ReadinessCheck({
             </div>
 
             {/* Begin Exam Button */}
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', marginBottom: '32px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', marginBottom: '28px' }}>
                 <button
                     className="btn btn-primary"
                     disabled={!allChecksReady}
@@ -124,10 +177,10 @@ export default function ReadinessCheck({
                         fontSize: '15px',
                         fontWeight: 600,
                         width: '100%',
-                        maxWidth: '300px'
+                        maxWidth: '320px'
                     }}
                 >
-                    {buttonLabel}
+                    {selectedSection === 'mcq' ? "Begin with MCQs (10 mins)" : "Begin with Python Coding Problem"}
                 </button>
 
                 {!allChecksReady && (

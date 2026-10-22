@@ -8,12 +8,17 @@ import ExamSubmissionModal from './components/ExamSubmissionModal';
 import ExamSubmissionResult from './components/ExamSubmissionResult';
 import FullscreenWarningModal from './components/FullscreenWarningModal';
 import ProctorInspectorModal from './components/ProctorInspectorModal';
+import ExitModal from './components/ExitModal';
 import { EXAM_METADATA } from './data/examQuestions';
 
 export default function App() {
-    // Stage: 'readiness_mcq' | 'exam_mcq' | 'readiness_coding' | 'exam_coding' | 'exam_submitted'
-    const [stage, setStage] = useState('readiness_mcq');
-    const [timer, setTimer] = useState(0);
+    // Stage: 'readiness_home' | 'exam_mcq' | 'readiness_coding' | 'exam_coding' | 'exam_submitted'
+    const [stage, setStage] = useState('readiness_home');
+    const [selectedFirstSection, setSelectedFirstSection] = useState('mcq'); // 'mcq' | 'coding'
+    const [completedSections, setCompletedSections] = useState(new Set());
+
+    // 10-Minute Timer (600s) — reliable countdown state
+    const [remainingSeconds, setRemainingSeconds] = useState(EXAM_METADATA.durationMinutes * 60);
 
     // Readiness: Only Camera and Fullscreen
     const [cameraEnabled, setCameraEnabled] = useState(false);
@@ -32,14 +37,11 @@ export default function App() {
     const [showFullscreenWarning, setShowFullscreenWarning] = useState(false);
     const [showSubmitModal, setShowSubmitModal] = useState(false);
     const [showDiagnosticsModal, setShowDiagnosticsModal] = useState(false);
+    const [showExitModal, setShowExitModal] = useState(false);
 
     // Hidden camera feed ref (never visible on screen)
     const cameraVideoRef = useRef(null);
     const cameraStreamRef = useRef(null);
-
-    // 10-minute timer for MCQs (600 seconds)
-    const mcqLimitSeconds = EXAM_METADATA.durationMinutes * 60; // 600s
-    const remainingSeconds = Math.max(0, mcqLimitSeconds - Math.floor(timer));
 
     const recordViolation = useCallback((violation) => {
         const item = {
@@ -50,7 +52,7 @@ export default function App() {
         window.athena?.logViolation?.(item);
     }, []);
 
-    // Periodic still snapshot from candidate camera (background processing)
+    // Feature: Periodic still snapshot from candidate camera (background processing)
     const saveVideoScreenShots = useCallback(async () => {
         const stream = cameraStreamRef.current;
         if (!stream) return;
@@ -98,10 +100,6 @@ export default function App() {
     useEffect(() => {
         if (!window.athena) return;
 
-        const removeTimerTick = window.athena.registerListenerForTimerTickFromMain((time) => {
-            setTimer(time);
-        });
-
         const removeCameraSnap = window.athena.registerListenerForCameraSnapFromMain(() => {
             saveVideoScreenShots();
         });
@@ -126,7 +124,6 @@ export default function App() {
         });
 
         return () => {
-            removeTimerTick?.();
             removeCameraSnap?.();
             removeScreenSnap?.();
             removeCameraCaptured?.();
@@ -135,17 +132,39 @@ export default function App() {
         };
     }, [saveVideoScreenShots, recordViolation]);
 
-    // 10 minutes MCQ automatic timeout: ends on its own and returns to home screen for coding
+    // Live 10-Minute Countdown Timer shown while questions are being done
     useEffect(() => {
-        if (stage === 'exam_mcq' && timer >= mcqLimitSeconds) {
-            transitionFromMcqToCoding();
-        }
-    }, [stage, timer, mcqLimitSeconds]);
+        const isExamActive = stage === 'exam_mcq' || stage === 'exam_coding';
+        if (!isExamActive) return;
 
-    // Helper: Transition from MCQ to Home Screen for Part 2 Coding
-    function transitionFromMcqToCoding() {
+        const interval = setInterval(() => {
+            setRemainingSeconds((prev) => {
+                if (prev <= 1) {
+                    clearInterval(interval);
+                    if (stage === 'exam_mcq') {
+                        handleFinishMcq();
+                    }
+                    return 0;
+                }
+                return prev - 1;
+            });
+        }, 1000);
+
+        return () => clearInterval(interval);
+    }, [stage]);
+
+    // Transition from MCQ to next part (or finish)
+    function handleFinishMcq() {
         setShowSubmitModal(false);
-        setStage('readiness_coding');
+        setCompletedSections(prev => new Set(prev).add('mcq'));
+
+        if (!completedSections.has('coding') && selectedFirstSection === 'mcq') {
+            // Return to home screen with permissions for Part 2 Coding
+            setStage('readiness_coding');
+        } else {
+            // Both finished
+            setStage('exam_submitted');
+        }
     }
 
     // Fullscreen and focus detection
@@ -211,29 +230,53 @@ export default function App() {
         }
     }
 
-    // Begin Part 1: MCQs
-    async function startMcqExam() {
+    // Start whatever section candidate chose first
+    async function handleStartChosenSection() {
         try {
             if (window.athena?.startTimerOnMain) {
                 await window.athena.startTimerOnMain();
             }
+        } catch (e) {
+            // non-fatal
+        }
+
+        if (selectedFirstSection === 'mcq') {
             setStage('exam_mcq');
-        } catch (error) {
-            setStage('exam_mcq');
+        } else {
+            setStage('exam_coding');
         }
     }
 
-    // Begin Part 2: Coding Problem
-    function startCodingExam() {
+    // Start Coding Section
+    function handleStartCoding() {
         setStage('exam_coding');
     }
 
-    // Submit Final Coding Problem
+    // Submit Coding problem
     function handleSubmitCoding(result) {
         setCodingSubmission(result);
-        setStage('exam_submitted');
-        if (window.athena?.stopTimerOnMain) {
-            window.athena.stopTimerOnMain();
+        setCompletedSections(prev => new Set(prev).add('coding'));
+
+        if (!completedSections.has('mcq') && selectedFirstSection === 'coding') {
+            // If they did coding first, now return to home screen for MCQs
+            setStage('readiness_home');
+            setSelectedFirstSection('mcq');
+        } else {
+            // Both finished
+            setStage('exam_submitted');
+            if (window.athena?.stopTimerOnMain) {
+                window.athena.stopTimerOnMain();
+            }
+        }
+    }
+
+    // User chooses to exit app immediately
+    function handleConfirmExit() {
+        setShowExitModal(false);
+        if (window.athena?.exitApp) {
+            window.athena.exitApp();
+        } else {
+            window.close();
         }
     }
 
@@ -248,41 +291,39 @@ export default function App() {
                 style={{ display: 'none' }}
             />
 
-            {/* Clean Light Header */}
+            {/* Clean Light Header with Timer and Exit Exam Option */}
             <Header
                 stage={stage}
-                timer={timer}
                 remainingSeconds={remainingSeconds}
                 violationCount={violations.length}
                 onOpenRules={() => window.athena?.showRules?.()}
                 onOpenDiagnostics={() => setShowDiagnosticsModal(true)}
                 onOpenSubmitModal={() => setShowSubmitModal(true)}
+                onOpenExitModal={() => setShowExitModal(true)}
             />
 
-            {/* View 1: Readiness Check for Part 1 (MCQs) */}
-            {stage === 'readiness_mcq' && (
+            {/* View 1: Home Readiness Screen (Choose which part to do first + Permissions) */}
+            {stage === 'readiness_home' && (
                 <ReadinessCheck
-                    title="Part 1: Multiple Choice Questions"
-                    subtitle="10 minutes timed assessment. Camera and full screen must be turned on to begin."
-                    badgeLabel="Section 1 Readiness"
-                    buttonLabel="Begin MCQs (10 mins)"
                     cameraEnabled={cameraEnabled}
                     fullScreen={fullScreen}
+                    selectedSection={selectedFirstSection}
+                    onSelectSection={(sec) => setSelectedFirstSection(sec)}
                     onGetCameraAccess={getCameraAccess}
                     onEnableFullScreen={enableFullScreen}
-                    onStartExam={startMcqExam}
+                    onStartExam={handleStartChosenSection}
                     onManualSnapshot={saveVideoScreenShots}
                 />
             )}
 
-            {/* View 2: Active 10-Minute MCQs Workspace */}
+            {/* View 2: Active MCQs Workspace with Live Timer on Question & Top Question Selector */}
             {stage === 'exam_mcq' && (
                 <ExamWorkspace
                     answers={answers}
                     setAnswers={setAnswers}
                     flaggedQuestions={flaggedQuestions}
                     setFlaggedQuestions={setFlaggedQuestions}
-                    snapshotStats={snapshotStats}
+                    remainingSeconds={remainingSeconds}
                     onOpenSubmitModal={() => setShowSubmitModal(true)}
                 />
             )}
@@ -290,20 +331,18 @@ export default function App() {
             {/* View 3: Back to Home Screen with Permissions for Part 2 Coding */}
             {stage === 'readiness_coding' && (
                 <ReadinessCheck
-                    title="Part 2: Python Coding Assessment"
-                    subtitle="Please re-verify your camera and full screen before proceeding to the coding question."
-                    badgeLabel="Section 2 Readiness"
-                    buttonLabel="Begin Coding Assessment"
                     cameraEnabled={cameraEnabled}
                     fullScreen={fullScreen}
+                    selectedSection="coding"
+                    onSelectSection={() => {}}
                     onGetCameraAccess={getCameraAccess}
                     onEnableFullScreen={enableFullScreen}
-                    onStartExam={startCodingExam}
+                    onStartExam={handleStartCoding}
                     onManualSnapshot={saveVideoScreenShots}
                 />
             )}
 
-            {/* View 4: Python Coding Problem Workspace */}
+            {/* View 4: Python Coding Problem Workspace with Live Timer */}
             {stage === 'exam_coding' && (
                 <CodingWorkspace
                     onSubmitCoding={handleSubmitCoding}
@@ -316,7 +355,15 @@ export default function App() {
             {stage === 'exam_submitted' && (
                 <ExamSubmissionResult
                     answers={answers}
-                    elapsedSeconds={timer}
+                    elapsedSeconds={600 - remainingSeconds}
+                />
+            )}
+
+            {/* Exit Confirmation Modal */}
+            {showExitModal && (
+                <ExitModal
+                    onConfirmExit={handleConfirmExit}
+                    onClose={() => setShowExitModal(false)}
                 />
             )}
 
@@ -332,7 +379,7 @@ export default function App() {
                 <ExamSubmissionModal
                     answers={answers}
                     flaggedQuestions={flaggedQuestions}
-                    onConfirmSubmit={transitionFromMcqToCoding}
+                    onConfirmSubmit={handleFinishMcq}
                     onClose={() => setShowSubmitModal(false)}
                 />
             )}

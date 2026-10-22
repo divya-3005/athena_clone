@@ -1,15 +1,15 @@
 // src/components/Header.jsx
 import React from 'react';
-import { Clock, Shield, AlertCircle } from 'lucide-react';
+import { Clock, Shield, AlertCircle, LogOut } from 'lucide-react';
 
 export default function Header({ 
     stage,
-    timer, 
     remainingSeconds, 
     violationCount, 
     onOpenRules, 
     onOpenDiagnostics,
-    onOpenSubmitModal
+    onOpenSubmitModal,
+    onOpenExitModal
 }) {
     const isExamActive = stage === 'exam_mcq' || stage === 'exam_coding';
 
@@ -25,9 +25,9 @@ export default function Header({
             {/* Brand */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <div style={{
-                    width: '30px',
-                    height: '30px',
-                    borderRadius: '6px',
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '8px',
                     background: 'var(--primary)',
                     display: 'flex',
                     alignItems: 'center',
@@ -37,34 +37,49 @@ export default function Header({
                     <Shield size={18} />
                 </div>
                 <div>
-                    <span style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text)' }}>
+                    <span style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text)' }}>
                         Athena
                     </span>
                     <span style={{ fontSize: '13px', color: 'var(--text-muted)', marginLeft: '8px' }}>
+                        {stage === 'readiness_select' && "Assessment Readiness"}
                         {stage === 'readiness_mcq' && "MCQ Readiness Check"}
-                        {stage === 'exam_mcq' && "Part 1: Multiple Choice (10 min)"}
+                        {stage === 'exam_mcq' && "Part 1: Multiple Choice"}
                         {stage === 'readiness_coding' && "Coding Readiness Check"}
-                        {stage === 'exam_coding' && "Part 2: Python Coding Assessment"}
+                        {stage === 'exam_coding' && "Part 2: Python Coding"}
                         {stage === 'exam_submitted' && "Exam Concluded"}
                     </span>
                 </div>
             </div>
 
-            {/* Center Status during exam */}
+            {/* Center Status & Timer during exam */}
             {isExamActive ? (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
                     <div className="badge badge-ready" style={{ padding: '6px 12px' }}>
                         <span className="recording-dot" />
                         <span>Camera Active</span>
                     </div>
 
-                    {stage === 'exam_mcq' && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text)', fontFamily: 'var(--font-mono)', fontSize: '15px', fontWeight: 600 }}>
-                            <Clock size={16} color="var(--text-muted)" />
-                            <span>{formatTime(remainingSeconds)}</span>
-                            <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 400 }}>remaining</span>
-                        </div>
-                    )}
+                    {/* Prominent Header Timer */}
+                    <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        background: remainingSeconds < 120 ? 'var(--danger-bg)' : '#f1f5f9',
+                        border: `1px solid ${remainingSeconds < 120 ? 'var(--danger-border)' : 'var(--border)'}`,
+                        borderRadius: '8px',
+                        padding: '6px 14px'
+                    }}>
+                        <Clock size={16} color={remainingSeconds < 120 ? 'var(--danger)' : 'var(--primary)'} />
+                        <span style={{
+                            fontFamily: 'var(--font-mono)',
+                            fontSize: '16px',
+                            fontWeight: 700,
+                            color: remainingSeconds < 120 ? 'var(--danger)' : 'var(--text)'
+                        }}>
+                            {formatTime(remainingSeconds)}
+                        </span>
+                        <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>left</span>
+                    </div>
 
                     {violationCount > 0 && (
                         <div className="badge badge-warn" onClick={onOpenDiagnostics} style={{ cursor: 'pointer' }}>
@@ -75,7 +90,7 @@ export default function Header({
                 </div>
             ) : <div />}
 
-            {/* Actions */}
+            {/* Actions: Rules, Inspector, Finish, and Exit */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <button 
                     className="btn btn-secondary btn-sm"
@@ -93,13 +108,22 @@ export default function Header({
 
                 {stage === 'exam_mcq' && (
                     <button 
-                        className="btn btn-danger btn-sm"
-                        style={{ marginLeft: '4px' }}
+                        className="btn btn-primary btn-sm"
                         onClick={onOpenSubmitModal}
                     >
                         Finish MCQs
                     </button>
                 )}
+
+                {/* Permanent visible Exit Exam button */}
+                <button 
+                    className="btn btn-secondary btn-sm"
+                    onClick={onOpenExitModal}
+                    style={{ color: 'var(--danger)', borderColor: 'var(--danger-border)', background: 'var(--danger-bg)' }}
+                    title="Exit exam and quit application"
+                >
+                    <LogOut size={13} /> Exit Exam
+                </button>
             </div>
         </header>
     );

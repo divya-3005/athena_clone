@@ -1,6 +1,6 @@
 // src/components/CodingWorkspace.jsx
 import React, { useState } from 'react';
-import { Play, Send, RotateCcw, CheckCircle2, XCircle, AlertCircle, Code2, Terminal } from 'lucide-react';
+import { Play, Send, RotateCcw, CheckCircle2, XCircle, AlertCircle, Code2, Terminal, Clock } from 'lucide-react';
 import { CODING_PROBLEM } from '../data/examQuestions';
 
 export default function CodingWorkspace({
@@ -202,9 +202,29 @@ export default function CodingWorkspace({
                     alignItems: 'center',
                     justifyContent: 'space-between'
                 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: 600, color: 'var(--text)' }}>
-                        <Code2 size={16} color="var(--primary)" />
-                        <span>solution.py</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: 600, color: 'var(--text)' }}>
+                            <Code2 size={16} color="var(--primary)" />
+                            <span>solution.py</span>
+                        </div>
+
+                        {/* Live Timer shown while coding */}
+                        <div style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            background: '#eff6ff',
+                            color: 'var(--primary)',
+                            border: '1px solid var(--primary-border)',
+                            padding: '3px 8px',
+                            borderRadius: '6px',
+                            fontSize: '12px',
+                            fontWeight: 600,
+                            fontFamily: 'var(--font-mono)'
+                        }}>
+                            <Clock size={13} />
+                            <span>{Math.floor(remainingSeconds / 60).toString().padStart(2, '0')}:{(remainingSeconds % 60).toString().padStart(2, '0')} remaining</span>
+                        </div>
                     </div>
 
                     <button
