@@ -42,6 +42,7 @@ function createWindow() {
         minWidth: 1024,
         minHeight: 720,
         title: "Athena | Secure Proctoring Desktop Environment",
+        icon: path.join(import.meta.dirname, "icon.png"),
         backgroundColor: "#f8fafc",
         webPreferences: {
             devTools: true,
