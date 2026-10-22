@@ -30,7 +30,10 @@ elif [ -d "$APP_IN_DIR" ]; then
 # Case 3: Check if Athena is already installed in /Applications
 elif [ -d "$APP_IN_APPLICATIONS" ]; then
     TARGET_APP="$APP_IN_APPLICATIONS"
-# Case 4: Mount DMG directly if app not unpacked yet
+# Case 4: Check if Athena is in Downloads folder
+elif [ -d "$HOME/Downloads/Athena.app" ]; then
+    TARGET_APP="$HOME/Downloads/Athena.app"
+# Case 5: Mount DMG directly if app not unpacked yet
 elif [ -f "$DMG_PATH" ] || [ -f "$DMG_LOCAL" ]; then
     CHOSEN_DMG="$DMG_PATH"
     if [ ! -f "$CHOSEN_DMG" ]; then

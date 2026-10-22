@@ -90,9 +90,13 @@ For immediate evaluation without installing Node dependencies or manually config
 ---
 
 ### Option 2: Running from the Standalone Executable DMG
-If you have the compiled disk image:
+If you downloaded or copied the `.dmg` or `.app` on macOS, Apple Gatekeeper attaches a quarantine flag (`"App might be harmful / move to trash"`). Run this single command to clear quarantine and launch:
+
 ```bash
-# Mount DMG, bypass Gatekeeper, and launch Athena in one command
+# If installed in Applications:
+xattr -cr /Applications/Athena.app && open /Applications/Athena.app
+
+# Or directly from the DMG without installing:
 hdiutil attach release/Athena-1.0.0-arm64.dmg && xattr -cr "/Volumes/Athena Proctoring Platform/Athena.app" && open "/Volumes/Athena Proctoring Platform/Athena.app"
 ```
 
