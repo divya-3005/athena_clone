@@ -41,8 +41,7 @@ export default function Header({
                         Athena
                     </span>
                     <span style={{ fontSize: '13px', color: 'var(--text-muted)', marginLeft: '8px' }}>
-                        {stage === 'readiness_select' && "Assessment Readiness"}
-                        {stage === 'readiness_mcq' && "MCQ Readiness Check"}
+                        {stage === 'readiness_home' && "Assessment Setup & Readiness"}
                         {stage === 'exam_mcq' && "Part 1: Multiple Choice"}
                         {stage === 'readiness_coding' && "Coding Readiness Check"}
                         {stage === 'exam_coding' && "Part 2: Python Coding"}

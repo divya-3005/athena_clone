@@ -1,115 +1,99 @@
 # Athena | Secure Proctoring Desktop Application
 
-A modern, high-integrity proctoring and assessment desktop application built with **Electron**, **React 19**, and **Vite**, based on the conventions and architecture of the Athena proctoring tool.
+A modern, high-integrity assessment desktop application built with **Electron**, **React 19**, and **Vite**, featuring automated proctoring, synchronized multi-part assessments (MCQs and Python coding), and anti-cheating protections.
 
 ---
 
-## 🌟 Features Overview
+## 🌟 Key Features
 
-### 1. Pre-Exam Readiness & Biometric Verification
-- **Webcam Feed Verification**: Candidate identity check requesting live camera access (`navigator.mediaDevices.getUserMedia`) with real-time video preview.
-- **Desktop Screen Sharing**: System screen stream capture (`navigator.mediaDevices.getDisplayMedia` and Electron `session.setDisplayMediaRequestHandler`) with dedicated display monitor preview.
-- **Full-Screen Enforcement**: Locks candidate into full-screen mode (`document.documentElement.requestFullscreen`) before exam initiation.
-- **Microphone & Ambient Audio Check**: Audio meter with Web Audio API `AudioContext` & `AnalyserNode` frequency analyzer.
-- **Candidate Verification Details**: Form for candidate identification (Name, Roll Number / ID, Academic Integrity honor pledge).
-- **Prerequisite Gate**: "Begin Exam" CTA is strictly locked until all hardware and integrity checks pass.
+### 1. Pre-Exam Readiness & Permissions
+- **Streamlined Setup**: Only requires **Camera** and **Fullscreen** permissions before starting.
+- **Privacy-First Monitoring**: The webcam operates invisibly in the background for surveillance snapshots without displaying a running video feed on the screen.
+- **Section Selection**: Candidates can choose whether to begin with **Part 1 (MCQs)** or **Part 2 (Python Coding)**.
 
-### 2. Dual Surveillance Engine ("Parallel Save")
-- **Synchronized 5s Snapshots**:
-  - **Camera Snapshot**: Renderer captures candidate facial still frame from the live video track using `ImageCapture` / Canvas fallback, serializes it to an `ArrayBuffer`, and writes a timestamped JPEG to `app/user-camera-snap/`.
-  - **Screen Preview Capture**: Electron main process uses `desktopCapturer.getSources({ types: ['screen'] })` to take a full-resolution PNG capture of the desktop display and saves it to `app/user-screen-snap/`.
-- **1-Second Timer Heartbeat**: Synchronized IPC timer dispatching `timer` events from the main process to the renderer every second.
+### 2. Part 1: Multiple Choice Questions (MCQs)
+- **12 Curated Technical Questions**: Covering architecture, runtime models, algorithms, and security.
+- **Question Matrix & Quick Selector**: Jump directly to any question; questions can be answered in any order.
+- **Live Countdown Badge**: A dedicated timer (`⏱️ mm:ss left`) is displayed directly on the question card and top header.
+- **Palette Tracking**: Real-time status for Answered, Flagged, and Unvisited questions.
 
-### 3. Anti-Cheating & Lockdown Security
-- **Native Shortcut & Clipboard Interception**:
-  - Electron `webContents.on("before-input-event")` intercepts `Ctrl+C` and `Cmd+C` at the OS level, cancels the event (`preventDefault()`), and displays a native Electron warning dialog (`dialog.showMessageBox`).
-  - Intercepts and logs copy and paste shortcuts.
-- **Fullscreen Departure Guard**:
-  - Listens to `fullscreenchange`. If the candidate attempts to minimize or exit full screen during the exam, an alert modal blocks the screen and requires re-entering full screen.
-- **Window Focus / Tab Departure Monitor**:
-  - Listens to `window.onblur`. If the candidate switches windows, apps, or clicks away, a violation incident is logged and counted.
-- **Application Menu Security**:
-  - Custom macOS and Windows menu bar with protected Exit Exam confirmation dialog, rules viewer, and diagnostic launcher.
+### 3. Part 2: Python Coding Workspace
+- **2 Python Problems with Question Chooser**:
+  1. `is_palindrome(s)`: Palindrome String Checker
+  2. `sum_of_two_numbers(a, b)`: Numerical Summation
+- **Interactive Question Tabs**: Freely toggle between both problems to solve in preferred order.
+- **Independent State**: Code, test results, and console logs are preserved across problem switches.
+- **Test Runner & Harness**:
+  - **Run**: Evaluates code against sample test cases.
+  - **Submit**: Evaluates code against hidden test cases.
+  - **Reset**: Restores starter function templates.
+  - **Print Logs Capture**: Automatically captures and displays candidate `print(...)` statements without corrupting execution results.
 
-### 4. Interactive Exam Assessment Workspace
-- **Multi-Section Question Bank**: Questions categorized across Distributed Systems, JavaScript Runtimes, and Algorithms & Security.
-- **Interactive Question Palette**: 1-12 matrix indicator showing questions marked as Answered, Flagged for Review, and Unvisited.
-- **Real-Time Proctoring HUD**:
-  - Picture-in-Picture (PiP) live candidate webcam stream with pulsating red recording dot (`REC 5s`).
-  - Active snapshot counter (camera snaps saved, screen snaps saved).
-  - Security lock indicators (Clipboard lock, Fullscreen lock, Focus monitor).
-  - Time remaining countdown and elapsed timer.
-- **Review & Submission Flow**:
-  - Pre-submission confirmation modal showing total answered, unanswered, and flagged questions.
-  - Final exam scorecard with performance percentage, passing status, and complete proctoring audit log.
-  - **Export Audit Report**: Native `showSaveDialogBox` to export a verifiable JSON session transcript to disk.
+### 4. Automated Proctoring & Anti-Cheating
+- **Active-Only Surveillance**: Camera and desktop screen snapshots are archived to `app/user-camera-snap/` and `app/user-screen-snap/` **only while actively taking an exam**—zero unnecessary data on landing screens.
+- **Keystroke & Shortcut Interception**: Intercepts `Ctrl+C` and `Cmd+C` with native Electron dialog warnings and logs violation telemetry. `Ctrl/Cmd+V` paste is disabled.
+- **Context Menu Lockdown**: Right-click context menu is disabled across the entire window.
+- **Fullscreen Departure Guard**: Exiting fullscreen triggers a modal alert and violation flag.
+- **Window Blur Tracking**: Detects when focus leaves the application.
+- **Proctor Inspector**: Built-in inspector modal to review disk snapshots and violation logs.
 
-### 5. Proctoring Inspector & Diagnostic Tools
-- Built-in inspector to browse archived webcam snapshots and screen snapshots on disk.
-- Demonstration controls for native Electron dialogs (`showRules`, `showMessageBox`, `selectFolder`, `selectFile`).
-- Live incident stream monitor.
+### 5. Exam Lifecycle & Controls
+- **Exit Exam Option**: Prominently accessible button and menu option to safely terminate the exam with confirmation.
+- **3-Second Auto-Quit**: Final submission displays scores and cleanly terminates the desktop app after a 3-second countdown.
 
 ---
 
-## 🛠️ Project Structure & Architecture
+## 🛠️ Project Structure
 
 ```
 athena_clone/
-├── app/                        # Electron Main & Preload Scripts
-│   ├── app.js                  # Main Process: Window, Menus, desktopCapturer, IPC, Anti-Cheat
-│   ├── preload.js              # Preload Script: Secure contextBridge exposing window.athena
-│   ├── user-camera-snap/       # Archived webcam snapshot JPEGs (auto-generated)
-│   └── user-screen-snap/       # Archived desktop screen PNGs (auto-generated)
-├── src/                        # React 19 Frontend Renderer
+├── app/
+│   ├── app.js               # Electron main process (lifecycle, IPC, Python runner, anti-cheat)
+│   ├── preload.js           # Secure contextBridge API bridge (window.athena)
+│   ├── user-camera-snap/    # Archived surveillance webcam snapshots (.jpg)
+│   └── user-screen-snap/    # Archived desktop screen captures (.png)
+├── src/
 │   ├── components/
-│   │   ├── Header.jsx          # Top Proctoring Telemetry HUD & Controls
-│   │   ├── ReadinessCheck.jsx  # Hardware verification & pre-exam checklist
-│   │   ├── ExamWorkspace.jsx   # Assessment questions, palette, and live PiP HUD
-│   │   ├── ExamSubmissionModal.jsx   # Pre-submission confirmation summary
-│   │   ├── ExamSubmissionResult.jsx  # Scorecard and proctoring audit report exporter
-│   │   ├── FullscreenWarningModal.jsx# Fullscreen breach interceptor
-│   │   └── ProctorInspectorModal.jsx # Real-time disk snapshot and diagnostics browser
+│   │   ├── Header.jsx               # Top navigation bar with timer and exit button
+│   │   ├── ReadinessCheck.jsx       # Camera & fullscreen check with section chooser
+│   │   ├── ExamWorkspace.jsx        # MCQ workspace with question palette & timer
+│   │   ├── CodingWorkspace.jsx      # Python editor, test runner, and question tabs
+│   │   ├── ExamSubmissionModal.jsx  # Pre-submission confirmation summary
+│   │   ├── ExamSubmissionResult.jsx # Final scorecard with 3s auto-exit countdown
+│   │   ├── FullscreenWarningModal.jsx# Fullscreen departure alert
+│   │   ├── ProctorInspectorModal.jsx# Disk snapshot and diagnostics browser
+│   │   └── ExitModal.jsx            # Exit confirmation dialog
 │   ├── data/
-│   │   └── examQuestions.js    # Comprehensive assessment question bank
-│   ├── App.jsx                 # Main state coordinator & IPC event wiring
-│   ├── index.css               # Design system & dark proctoring theme tokens
-│   └── main.jsx                # Application root mount
-├── dist/                       # Vite production bundle
-├── index.html                  # HTML entrypoint with Inter & JetBrains Mono typography
-├── package.json                # Dependencies, Electron, and Vite scripts
-└── vite.config.js              # Vite bundler configuration
+│   │   └── examQuestions.js # Question bank and Python coding problem definitions
+│   ├── App.jsx              # Main application coordinator
+│   ├── index.css            # Clean, pleasant light theme design system
+│   └── main.jsx             # React root with ErrorBoundary protection
+├── dist/                    # Compiled production assets
+├── index.html               # Main HTML entrypoint
+├── package.json             # Scripts and dependencies
+└── vite.config.js           # Vite configuration
 ```
 
 ---
 
-## 🚀 Running the Desktop App
+## 🚀 Getting Started
 
 ### 1. Install Dependencies
 ```bash
 npm install
 ```
 
-### 2. Run Both Vite & Electron (One-Step Development)
+### 2. Run the Desktop App
 ```bash
+# Option A: One-step dev launch (starts Vite dev server and opens Electron)
 npm start
-# or
-npm run app
-```
-This runs Vite dev server on `http://localhost:5173` and automatically opens the Electron desktop window once the dev server is ready.
 
-### 3. Alternative: Run In Separate Terminals
-**Terminal 1 (Vite Dev Server):**
-```bash
-npm run dev
-```
-
-**Terminal 2 (Electron Desktop Application):**
-```bash
+# Option B: Build and launch Electron app
 npm run electron
 ```
 
-### 4. Build Production Bundle
-```bash
-npm run build
-```
-When built, Electron automatically falls back to loading `dist/index.html` via `loadFile` if the Vite dev server is offline.
+---
+
+## 📋 Evaluation Notes
+- **Python Runtime**: Uses the native system `python3` to execute candidate code with a 5-second timeout safeguard to protect against infinite loops.
+- **Clean Light Theme**: Distraction-free, pleasant styling focused on clarity and usability.
