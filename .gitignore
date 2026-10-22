@@ -1,0 +1,22 @@
+# Node & Dependencies
+node_modules/
+.DS_Store
+
+# Build outputs
+dist/
+dist-electron/
+out/
+
+# Proctoring capture output directories
+app/user-camera-snap/*.jpg
+app/user-camera-snap/*.png
+app/user-screen-snap/*.png
+app/user-screen-snap/*.jpg
+!app/user-camera-snap/.gitkeep
+!app/user-screen-snap/.gitkeep
+
+# Logs & temp
+*.log
+npm-debug.log*
+.env
+.env.local

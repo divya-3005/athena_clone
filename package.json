@@ -1,0 +1,27 @@
+{
+  "name": "athena-clone",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "main": "app/app.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "electron": "electron ./app/app.js",
+    "start": "concurrently -k \"vite\" \"wait-on tcp:5173 && electron ./app/app.js\"",
+    "app": "concurrently -k \"vite\" \"wait-on tcp:5173 && electron ./app/app.js\""
+  },
+  "dependencies": {
+    "lucide-react": "^1.16.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
+    "concurrently": "^9.1.2",
+    "electron": "^33.2.1",
+    "vite": "^6.0.7",
+    "wait-on": "^8.0.2"
+  }
+}
