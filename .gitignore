@@ -20,3 +20,7 @@ app/user-screen-snap/*.jpg
 npm-debug.log*
 .env
 .env.local
+
+# Chat submission files
+chat_transcript.*
+
