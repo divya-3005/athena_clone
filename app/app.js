@@ -446,52 +446,70 @@ ipcMain.handle("exit-app", () => {
     app.quit();
 });
 
-// Feature: Python Code Runner with timeout and test harness
+// Feature: Python Code Runner with timeout, multi-arg support, and print capture
 ipcMain.handle("run-python-code", async (_event, { code, testCases, functionName = "is_palindrome" }) => {
     return new Promise((resolve) => {
         const runnerScript = `
-import json, sys
+import json, sys, io
 
-code_str = ${JSON.stringify(code)}
-tests = ${JSON.stringify(testCases || [])}
-fn_name = ${JSON.stringify(functionName)}
+code_str = json.loads(${JSON.stringify(JSON.stringify(code))})
+tests = json.loads(${JSON.stringify(JSON.stringify(testCases || []))})
+fn_name = json.loads(${JSON.stringify(JSON.stringify(functionName))})
+
+user_out = io.StringIO()
+orig_out = sys.stdout
+sys.stdout = user_out
 
 results = []
+err_msg = None
+
 try:
     namespace = {}
     exec(code_str, namespace)
     fn = namespace.get(fn_name)
     if not fn or not callable(fn):
-        print(json.dumps({"error": f"Function '{fn_name}' was not found. Please define def {fn_name}(s):"}))
-        sys.exit(0)
-
-    for t in tests:
-        inp = t.get("input")
-        exp = t.get("expected")
-        try:
-            actual = fn(inp)
-            passed = (actual == exp)
-            results.append({
-                "id": t.get("id"),
-                "input": str(inp),
-                "expected": str(exp),
-                "actual": str(actual),
-                "passed": passed
-            })
-        except Exception as err:
-            results.append({
-                "id": t.get("id"),
-                "input": str(inp),
-                "expected": str(exp),
-                "actual": f"Error: {err}",
-                "passed": False,
-                "error": str(err)
-            })
-    print(json.dumps({"results": results, "allPassed": all(r["passed"] for r in results)}))
+        err_msg = f"Function '{fn_name}' was not found. Please define def {fn_name}(...):"
+    else:
+        for t in tests:
+            inp = t.get("input")
+            exp = t.get("expected")
+            try:
+                if isinstance(inp, (list, tuple)):
+                    actual = fn(*inp)
+                else:
+                    actual = fn(inp)
+                passed = (actual == exp)
+                results.append({
+                    "id": t.get("id"),
+                    "input": str(inp),
+                    "expected": str(exp),
+                    "actual": str(actual),
+                    "passed": passed
+                })
+            except Exception as call_err:
+                results.append({
+                    "id": t.get("id"),
+                    "input": str(inp),
+                    "expected": str(exp),
+                    "actual": f"Error: {call_err}",
+                    "passed": False,
+                    "error": str(call_err)
+                })
 except SyntaxError as syn_err:
-    print(json.dumps({"error": f"SyntaxError at line {syn_err.lineno}: {syn_err.msg}"}))
+    err_msg = f"SyntaxError at line {syn_err.lineno}: {syn_err.msg}"
 except Exception as gen_err:
-    print(json.dumps({"error": f"Runtime error: {gen_err}"}))
+    err_msg = f"Runtime error: {gen_err}"
+
+sys.stdout = orig_out
+user_logs = user_out.getvalue()
+
+output_obj = {
+    "error": err_msg,
+    "results": results,
+    "allPassed": bool(results and all(r["passed"] for r in results)),
+    "logs": user_logs
+}
+print("<<<ATHENA_START>>>" + json.dumps(output_obj) + "<<<ATHENA_END>>>")
 `;
 
         const pyProcess = spawn("python3", ["-c", runnerScript]);
@@ -514,9 +532,21 @@ except Exception as gen_err:
         pyProcess.on("close", (exitCode) => {
             clearTimeout(timer);
             try {
-                if (stdout.trim()) {
-                    const parsed = JSON.parse(stdout.trim());
+                const startMarker = "<<<ATHENA_START>>>";
+                const endMarker = "<<<ATHENA_END>>>";
+                if (stdout.includes(startMarker) && stdout.includes(endMarker)) {
+                    const startIdx = stdout.indexOf(startMarker) + startMarker.length;
+                    const endIdx = stdout.indexOf(endMarker);
+                    const jsonStr = stdout.slice(startIdx, endIdx);
+                    const parsed = JSON.parse(jsonStr);
                     resolve(parsed);
+                } else if (stdout.trim()) {
+                    try {
+                        const parsed = JSON.parse(stdout.trim());
+                        resolve(parsed);
+                    } catch (_) {
+                        resolve({ error: stdout.trim() });
+                    }
                 } else if (stderr.trim()) {
                     resolve({ error: stderr.trim() });
                 } else {

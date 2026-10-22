@@ -356,6 +356,7 @@ export default function App() {
             {stage === 'exam_submitted' && (
                 <ExamSubmissionResult
                     answers={answers}
+                    codingSubmission={codingSubmission}
                     elapsedSeconds={600 - remainingSeconds}
                 />
             )}

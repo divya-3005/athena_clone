@@ -81,7 +81,7 @@ export default function ReadinessCheck({
                             )}
                         </div>
                         <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
-                            1 Python coding problem with input/output, sample tests, and Run/Submit buttons.
+                            2 Python coding problems (Palindrome Checker &amp; Sum of Two Numbers) with question chooser, Run, and Submit.
                         </div>
                     </div>
                 </div>
@@ -180,7 +180,7 @@ export default function ReadinessCheck({
                         maxWidth: '320px'
                     }}
                 >
-                    {selectedSection === 'mcq' ? "Begin with MCQs (10 mins)" : "Begin with Python Coding Problem"}
+                    {selectedSection === 'mcq' ? "Begin with MCQs (10 mins)" : "Begin with Python Coding (2 Problems)"}
                 </button>
 
                 {!allChecksReady && (

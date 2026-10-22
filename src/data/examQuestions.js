@@ -212,50 +212,104 @@ const blob = await imageCapture.takePhoto();`,
     }
 ];
 
-export const CODING_PROBLEM = {
-    id: "py-101",
-    title: "Palindrome String Checker",
-    functionName: "is_palindrome",
-    description: "Write a function `is_palindrome(s)` that determines whether a given string `s` is a palindrome. A palindrome reads identically forwards and backwards. Your solution should be case-insensitive and ignore non-alphanumeric characters (such as punctuation and spaces).",
-    inputDescription: "A string `s` (1 <= len(s) <= 10^5)",
-    outputDescription: "Return `True` if `s` is a palindrome, otherwise return `False`.",
-    defaultCode: `def is_palindrome(s: str) -> bool:
+export const CODING_PROBLEMS = [
+    {
+        id: "py-101",
+        number: 1,
+        title: "Palindrome String Checker",
+        functionName: "is_palindrome",
+        shortDescription: "Check if a string is a palindrome ignoring casing and non-alphanumeric chars.",
+        description: "Write a function `is_palindrome(s)` that determines whether a given string `s` is a palindrome. A palindrome reads identically forwards and backwards. Your solution should be case-insensitive and ignore non-alphanumeric characters (such as punctuation and spaces).",
+        inputDescription: "A string `s` (1 <= len(s) <= 10^5)",
+        outputDescription: "Return `True` if `s` is a palindrome, otherwise return `False`.",
+        defaultCode: `def is_palindrome(s: str) -> bool:
     # Write your solution here
-    pass
-`,
-    starterCode: `def is_palindrome(s: str) -> bool:
-    # Example helper logic:
     cleaned = "".join(c.lower() for c in s if c.isalnum())
     return cleaned == cleaned[::-1]
 `,
-    examples: [
-        {
-            input: '"racecar"',
-            output: "True",
-            explanation: '"racecar" reads the same forward and backward.'
-        },
-        {
-            input: '"hello"',
-            output: "False",
-            explanation: '"hello" backwards is "olleh", which does not match.'
-        },
-        {
-            input: '"Madam, I\'m Adam"',
-            output: "True",
-            explanation: 'Ignoring punctuation, spaces, and casing results in "madamimadam", which is a palindrome.'
-        }
-    ],
-    sampleTests: [
-        { id: 1, input: "racecar", expected: true },
-        { id: 2, input: "hello", expected: false },
-        { id: 3, input: "Madam, I'm Adam", expected: true }
-    ],
-    allTests: [
-        { id: 1, input: "racecar", expected: true },
-        { id: 2, input: "hello", expected: false },
-        { id: 3, input: "Madam, I'm Adam", expected: true },
-        { id: 4, input: "12321", expected: true },
-        { id: 5, input: "python", expected: false },
-        { id: 6, input: "Was it a car or a cat I saw?", expected: true }
-    ]
-};
+        starterCode: `def is_palindrome(s: str) -> bool:
+    # Write your solution here
+    pass
+`,
+        examples: [
+            {
+                input: '"racecar"',
+                output: "True",
+                explanation: '"racecar" reads the same forward and backward.'
+            },
+            {
+                input: '"hello"',
+                output: "False",
+                explanation: '"hello" backwards is "olleh", which does not match.'
+            },
+            {
+                input: '"Madam, I\'m Adam"',
+                output: "True",
+                explanation: 'Ignoring punctuation, spaces, and casing results in "madamimadam", which is a palindrome.'
+            }
+        ],
+        sampleTests: [
+            { id: 1, input: "racecar", expected: true, label: 's = "racecar"' },
+            { id: 2, input: "hello", expected: false, label: 's = "hello"' },
+            { id: 3, input: "Madam, I'm Adam", expected: true, label: 's = "Madam, I\'m Adam"' }
+        ],
+        allTests: [
+            { id: 1, input: "racecar", expected: true, label: 's = "racecar"' },
+            { id: 2, input: "hello", expected: false, label: 's = "hello"' },
+            { id: 3, input: "Madam, I'm Adam", expected: true, label: 's = "Madam, I\'m Adam"' },
+            { id: 4, input: "12321", expected: true, label: 's = "12321"' },
+            { id: 5, input: "python", expected: false, label: 's = "python"' },
+            { id: 6, input: "Was it a car or a cat I saw?", expected: true, label: 's = "Was it a car or a cat I saw?"' }
+        ]
+    },
+    {
+        id: "py-102",
+        number: 2,
+        title: "Sum of Two Numbers",
+        functionName: "sum_of_two_numbers",
+        shortDescription: "Calculate and return the sum of two numbers a and b.",
+        description: "Write a function `sum_of_two_numbers(a, b)` that takes two numbers (integers or floats) `a` and `b` and returns their numerical sum (`a + b`).",
+        inputDescription: "Two numbers `a` and `b` (-10^9 <= a, b <= 10^9)",
+        outputDescription: "Return the sum `a + b`.",
+        defaultCode: `def sum_of_two_numbers(a: int, b: int) -> int:
+    # Write your solution here
+    return a + b
+`,
+        starterCode: `def sum_of_two_numbers(a: int, b: int) -> int:
+    # Write your solution here
+    pass
+`,
+        examples: [
+            {
+                input: "a = 5, b = 7",
+                output: "12",
+                explanation: "5 + 7 = 12"
+            },
+            {
+                input: "a = -3, b = 8",
+                output: "5",
+                explanation: "-3 + 8 = 5"
+            },
+            {
+                input: "a = 0, b = 0",
+                output: "0",
+                explanation: "0 + 0 = 0"
+            }
+        ],
+        sampleTests: [
+            { id: 1, input: [5, 7], expected: 12, label: "a = 5, b = 7" },
+            { id: 2, input: [-3, 8], expected: 5, label: "a = -3, b = 8" },
+            { id: 3, input: [0, 0], expected: 0, label: "a = 0, b = 0" }
+        ],
+        allTests: [
+            { id: 1, input: [5, 7], expected: 12, label: "a = 5, b = 7" },
+            { id: 2, input: [-3, 8], expected: 5, label: "a = -3, b = 8" },
+            { id: 3, input: [0, 0], expected: 0, label: "a = 0, b = 0" },
+            { id: 4, input: [100, -250], expected: -150, label: "a = 100, b = -250" },
+            { id: 5, input: [123456, 654321], expected: 777777, label: "a = 123456, b = 654321" },
+            { id: 6, input: [-50, -50], expected: -100, label: "a = -50, b = -50" }
+        ]
+    }
+];
+
+export const CODING_PROBLEM = CODING_PROBLEMS[0];
