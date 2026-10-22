@@ -89,21 +89,18 @@ For immediate evaluation without installing Node dependencies or manually config
 
 ---
 
-### Option 2: Running from the Submittable DMG (< 50 MB)
-If submitting to portals with strict file size limits (under 50 MB), use `release/Athena-Submission-under50MB.dmg` (**5.4 MB**):
+### Option 2: Running from the Executable DMG (`Athena.dmg`)
+The executable disk image is located in `release/Athena.dmg` (**5.4 MB**, well under the 50 MB portal upload limit).
+
 ```bash
-# Mount and launch the 5.4MB submittable DMG
-xattr -cr release/Athena-Submission-under50MB.dmg
-hdiutil attach release/Athena-Submission-under50MB.dmg && open "/Volumes/Athena Proctoring Platform/Athena.app"
+# Clear Gatekeeper quarantine and launch in one step:
+xattr -cr release/Athena.dmg
+hdiutil attach release/Athena.dmg && open "/Volumes/Athena/Athena.app"
 ```
 
-For the full offline pre-bundled installer (~93 MB):
+If `Athena.app` is dragged to `/Applications`:
 ```bash
-# If installed in Applications:
 xattr -cr /Applications/Athena.app && open /Applications/Athena.app
-
-# Or directly from the full DMG without installing:
-hdiutil attach release/Athena-1.0.0-arm64.dmg && xattr -cr "/Volumes/Athena Proctoring Platform/Athena.app" && open "/Volumes/Athena Proctoring Platform/Athena.app"
 ```
 
 ---

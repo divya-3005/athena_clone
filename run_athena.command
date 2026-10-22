@@ -12,8 +12,8 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 APP_IN_RELEASE="$DIR/release/mac-arm64/Athena.app"
 APP_IN_DIR="$DIR/Athena.app"
 APP_IN_APPLICATIONS="/Applications/Athena.app"
-DMG_PATH="$DIR/release/Athena-1.0.0-arm64.dmg"
-DMG_LOCAL="$DIR/Athena-1.0.0-arm64.dmg"
+DMG_PATH="$DIR/release/Athena.dmg"
+DMG_LOCAL="$DIR/Athena.dmg"
 
 echo "========================================================"
 echo "  🚀 Starting Athena Proctoring Desktop Application...  "
@@ -41,7 +41,10 @@ elif [ -f "$DMG_PATH" ] || [ -f "$DMG_LOCAL" ]; then
     fi
     echo "📦 Mounting Athena Disk Image ($CHOSEN_DMG)..."
     hdiutil attach "$CHOSEN_DMG" -nobrowse -quiet || true
-    TARGET_APP="/Volumes/Athena Proctoring Platform/Athena.app"
+    TARGET_APP="/Volumes/Athena/Athena.app"
+    if [ ! -d "$TARGET_APP" ]; then
+        TARGET_APP="/Volumes/Athena Proctoring Platform/Athena.app"
+    fi
 fi
 
 if [ -z "$TARGET_APP" ] || [ ! -d "$TARGET_APP" ]; then
