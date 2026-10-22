@@ -16,9 +16,9 @@ contextBridge.exposeInMainWorld("athena", {
         };
     },
 
-    startTimerOnMain: () => {
+    startTimerOnMain: (options) => {
         try {
-            return ipcRenderer.invoke("start-timer");
+            return ipcRenderer.invoke("start-timer", options);
         } catch (error) {
             console.error("Failed to invoke start-timer:", error);
             throw error;

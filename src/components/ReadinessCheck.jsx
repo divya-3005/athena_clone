@@ -13,6 +13,7 @@ export default function ReadinessCheck({
     onManualSnapshot
 }) {
     const [showTools, setShowTools] = useState(false);
+    const [saveLocally, setSaveLocally] = useState(true);
     const allChecksReady = cameraEnabled && fullScreen;
 
     return (
@@ -166,12 +167,46 @@ export default function ReadinessCheck({
                 </div>
             </div>
 
+            {/* Ask candidate if they want to save pictures on their laptop */}
+            <div 
+                onClick={() => setSaveLocally(!saveLocally)}
+                style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    padding: '14px 18px',
+                    borderRadius: '8px',
+                    border: `1.5px solid ${saveLocally ? 'var(--primary)' : 'var(--border)'}`,
+                    background: saveLocally ? 'var(--primary-bg)' : '#ffffff',
+                    marginBottom: '20px',
+                    cursor: 'pointer',
+                    userSelect: 'none'
+                }}
+            >
+                <input 
+                    type="checkbox" 
+                    checked={saveLocally} 
+                    onChange={(e) => setSaveLocally(e.target.checked)}
+                    style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: 'var(--primary)' }}
+                />
+                <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 600, fontSize: '14px', color: 'var(--text)' }}>
+                        Save proctoring snapshots to this computer
+                    </div>
+                    <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                        {saveLocally 
+                            ? 'Photos and screen captures will be archived to Desktop/Athena_Proctoring_Data for evaluator review.' 
+                            : 'No files or photos will be saved to your laptop.'}
+                    </div>
+                </div>
+            </div>
+
             {/* Begin Exam Button */}
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', marginBottom: '28px' }}>
                 <button
                     className="btn btn-primary"
                     disabled={!allChecksReady}
-                    onClick={onStartExam}
+                    onClick={() => onStartExam && onStartExam(saveLocally)}
                     style={{
                         padding: '13px 36px',
                         fontSize: '15px',

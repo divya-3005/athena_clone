@@ -89,14 +89,20 @@ For immediate evaluation without installing Node dependencies or manually config
 
 ---
 
-### Option 2: Running from the Standalone Executable DMG
-If you downloaded or copied the `.dmg` or `.app` on macOS, Apple Gatekeeper attaches a quarantine flag (`"App might be harmful / move to trash"`). Run this single command to clear quarantine and launch:
+### Option 2: Running from the Submittable DMG (< 50 MB)
+If submitting to portals with strict file size limits (under 50 MB), use `release/Athena-Submission-under50MB.dmg` (**5.4 MB**):
+```bash
+# Mount and launch the 5.4MB submittable DMG
+xattr -cr release/Athena-Submission-under50MB.dmg
+hdiutil attach release/Athena-Submission-under50MB.dmg && open "/Volumes/Athena Proctoring Platform/Athena.app"
+```
 
+For the full offline pre-bundled installer (~93 MB):
 ```bash
 # If installed in Applications:
 xattr -cr /Applications/Athena.app && open /Applications/Athena.app
 
-# Or directly from the DMG without installing:
+# Or directly from the full DMG without installing:
 hdiutil attach release/Athena-1.0.0-arm64.dmg && xattr -cr "/Volumes/Athena Proctoring Platform/Athena.app" && open "/Volumes/Athena Proctoring Platform/Athena.app"
 ```
 
@@ -114,7 +120,13 @@ npm start
 # 3. Build the production DMG installer
 npm run dist
 ```
-The output executable will be placed in `release/Athena-1.0.0-arm64.dmg`.
+
+---
+
+## 📸 Proctoring Photos & Privacy Control
+- **User Consent Checkbox**: On the initial setup screen, the candidate is explicitly asked: *"Save proctoring snapshots to this computer"*.
+  - If **Checked**: Webcam photos (`.jpg`) and screen captures (`.png`) are archived to `~/Desktop/Athena_Proctoring_Data/` so the evaluator can easily review them. When the exam finishes, the folder automatically opens in macOS Finder.
+  - If **Unchecked**: Zero pictures or files are stored on the candidate's laptop (operates completely in-memory).
 
 ---
 

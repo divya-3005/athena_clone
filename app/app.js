@@ -18,13 +18,17 @@ let timerInterval = null;
 let captureInterval = null;
 let cameraShotPath = null;
 let isExamActive = false;
+let saveLocallyEnabled = true;
 const sessionViolations = [];
 
 // Feature: Screen Preview Capture + Camera Snap — output folders
-// In packaged mode, write to writable user data folder; in dev, write to project app folder
-const baseStorageDir = app.isPackaged
-    ? path.join(app.getPath("userData"), "proctoring-data")
-    : import.meta.dirname;
+// Saved directly to Desktop/Athena_Proctoring_Data so the evaluator and student can easily inspect them!
+let baseStorageDir;
+try {
+    baseStorageDir = path.join(app.getPath("desktop"), "Athena_Proctoring_Data");
+} catch {
+    baseStorageDir = path.join(app.getPath("userData"), "Athena_Proctoring_Data");
+}
 
 const CAMERA_SNAP_DIR = path.join(baseStorageDir, "user-camera-snap");
 const SCREEN_SNAP_DIR = path.join(baseStorageDir, "user-screen-snap");
@@ -270,7 +274,7 @@ function showExamRulesDialog() {
 
 // Feature: Screen Preview Capture with graceful macOS permission fallback
 async function takeScreenShot() {
-    if (!isExamActive) return null;
+    if (!isExamActive || !saveLocallyEnabled) return null;
     try {
         const sources = await desktopCapturer.getSources({
             types: ["screen"],
@@ -311,8 +315,9 @@ async function takeScreenShot() {
 }
 
 // Start proctoring timer and periodic snapshots
-ipcMain.handle("start-timer", () => {
+ipcMain.handle("start-timer", (_event, options = {}) => {
     isExamActive = true;
+    saveLocallyEnabled = options?.saveLocally !== false;
     startTimestamp = Date.now();
 
     if (timerInterval) clearInterval(timerInterval);
@@ -342,7 +347,7 @@ ipcMain.handle("start-timer", () => {
         });
     }, 5000);
 
-    return { success: true, startTime: startTimestamp };
+    return { success: true, startTime: startTimestamp, saveLocally: saveLocallyEnabled };
 });
 
 ipcMain.handle("stop-timer", () => {
@@ -351,12 +356,22 @@ ipcMain.handle("stop-timer", () => {
     if (captureInterval) clearInterval(captureInterval);
     timerInterval = null;
     captureInterval = null;
-    return { success: true };
+
+    // Automatically open the captures folder on the Desktop in Finder if local saving was enabled
+    if (saveLocallyEnabled) {
+        try {
+            shell.openPath(baseStorageDir);
+        } catch (e) {
+            console.error("Could not open captures directory:", e);
+        }
+    }
+
+    return { success: true, storageDir: saveLocallyEnabled ? baseStorageDir : null };
 });
 
 ipcMain.handle("store-camera-snap-image-on-disk", (_event, data) => {
-    if (!isExamActive) {
-        return { success: false, ignored: true, reason: "Exam not active" };
+    if (!isExamActive || !saveLocallyEnabled) {
+        return { success: false, ignored: true, reason: !isExamActive ? "Exam not active" : "Local saving disabled" };
     }
     try {
         const fileName = `${Date.now()}.jpg`;

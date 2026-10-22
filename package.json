@@ -41,6 +41,7 @@
     },
     "dmg": {
       "title": "Athena Proctoring Platform",
+      "format": "UDBZ",
       "contents": [
         {
           "x": 130,
@@ -53,18 +54,18 @@
           "path": "/Applications"
         }
       ]
-    }
+    },
+    "compression": "maximum"
   },
-  "dependencies": {
-    "lucide-react": "^1.16.0",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
-  },
+  "dependencies": {},
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.4",
     "concurrently": "^9.1.2",
     "electron": "^33.2.1",
     "electron-builder": "^26.15.3",
+    "lucide-react": "^1.16.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
     "vite": "^6.0.7",
     "wait-on": "^8.0.2"
   }

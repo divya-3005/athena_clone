@@ -248,10 +248,10 @@ export default function App() {
     }
 
     // Start whatever section candidate chose first
-    async function handleStartChosenSection() {
+    async function handleStartChosenSection(saveLocally = true) {
         try {
             if (window.athena?.startTimerOnMain) {
-                await window.athena.startTimerOnMain();
+                await window.athena.startTimerOnMain({ saveLocally });
             }
         } catch (e) {
             // non-fatal
@@ -265,10 +265,10 @@ export default function App() {
     }
 
     // Start Coding Section
-    async function handleStartCoding() {
+    async function handleStartCoding(saveLocally = true) {
         try {
             if (window.athena?.startTimerOnMain) {
-                await window.athena.startTimerOnMain();
+                await window.athena.startTimerOnMain({ saveLocally });
             }
         } catch (e) {
             // non-fatal
