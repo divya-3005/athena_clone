@@ -210,9 +210,6 @@ export default function ReadinessCheck({
 
                 {showTools && (
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '12px' }}>
-                        <button className="btn btn-secondary btn-sm" onClick={onManualSnapshot}>
-                            <Camera size={13} /> Save screenshot now
-                        </button>
                         <button className="btn btn-secondary btn-sm" onClick={() => window.athena?.showRules()}>
                             <FileText size={13} /> Show rules dialog
                         </button>

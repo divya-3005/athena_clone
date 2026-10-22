@@ -9,6 +9,7 @@ let startTimestamp = null;
 let timerInterval = null;
 let captureInterval = null;
 let cameraShotPath = null;
+let isExamActive = false;
 const sessionViolations = [];
 
 // Feature: Screen Preview Capture + Camera Snap — output folders
@@ -240,6 +241,7 @@ function showExamRulesDialog() {
 
 // Feature: Screen Preview Capture with graceful macOS permission fallback
 async function takeScreenShot() {
+    if (!isExamActive) return null;
     try {
         const sources = await desktopCapturer.getSources({
             types: ["screen"],
@@ -281,6 +283,7 @@ async function takeScreenShot() {
 
 // Start proctoring timer and periodic snapshots
 ipcMain.handle("start-timer", () => {
+    isExamActive = true;
     startTimestamp = Date.now();
 
     if (timerInterval) clearInterval(timerInterval);
@@ -288,7 +291,7 @@ ipcMain.handle("start-timer", () => {
 
     // Timer tick every second
     timerInterval = setInterval(() => {
-        if (electronWindow && !electronWindow.isDestroyed()) {
+        if (electronWindow && !electronWindow.isDestroyed() && isExamActive) {
             const elapsed = (Date.now() - startTimestamp) / 1000;
             electronWindow.webContents.send("timer", elapsed);
         }
@@ -296,13 +299,13 @@ ipcMain.handle("start-timer", () => {
 
     // Feature: Parallel Save (camera photo + screen preview together every 5s)
     captureInterval = setInterval(() => {
-        if (!electronWindow || electronWindow.isDestroyed()) return;
+        if (!electronWindow || electronWindow.isDestroyed() || !isExamActive) return;
 
         Promise.all([
             Promise.resolve(electronWindow.webContents.send("camera-shot")),
             takeScreenShot()
         ]).then(([, screenResult]) => {
-            if (screenResult && electronWindow && !electronWindow.isDestroyed()) {
+            if (screenResult && electronWindow && !electronWindow.isDestroyed() && isExamActive) {
                 electronWindow.webContents.send("screen-captured", screenResult);
             }
         }).catch((error) => {
@@ -314,6 +317,7 @@ ipcMain.handle("start-timer", () => {
 });
 
 ipcMain.handle("stop-timer", () => {
+    isExamActive = false;
     if (timerInterval) clearInterval(timerInterval);
     if (captureInterval) clearInterval(captureInterval);
     timerInterval = null;
@@ -322,6 +326,9 @@ ipcMain.handle("stop-timer", () => {
 });
 
 ipcMain.handle("store-camera-snap-image-on-disk", (_event, data) => {
+    if (!isExamActive) {
+        return { success: false, ignored: true, reason: "Exam not active" };
+    }
     try {
         const fileName = `${Date.now()}.jpg`;
         let filePath = path.join(CAMERA_SNAP_DIR, fileName);

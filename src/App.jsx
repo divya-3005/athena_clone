@@ -54,6 +54,10 @@ export default function App() {
 
     // Feature: Periodic still snapshot from candidate camera (background processing)
     const saveVideoScreenShots = useCallback(async () => {
+        // Only capture when actively inside an exam workspace
+        const isExamActive = stage === 'exam_mcq' || stage === 'exam_coding';
+        if (!isExamActive) return;
+
         const stream = cameraStreamRef.current;
         if (!stream) return;
 
@@ -93,6 +97,13 @@ export default function App() {
             }
         } catch (error) {
             console.error("Camera snapshot error:", error);
+        }
+    }, [stage]);
+    
+    // Ensure proctoring captures are idle on initial landing screen
+    useEffect(() => {
+        if (window.athena?.stopTimerOnMain) {
+            window.athena.stopTimerOnMain();
         }
     }, []);
 
@@ -159,10 +170,16 @@ export default function App() {
         setCompletedSections(prev => new Set(prev).add('mcq'));
 
         if (!completedSections.has('coding') && selectedFirstSection === 'mcq') {
-            // Return to home screen with permissions for Part 2 Coding
+            // Stop captures while on landing screen for Part 2 Coding
+            if (window.athena?.stopTimerOnMain) {
+                window.athena.stopTimerOnMain();
+            }
             setStage('readiness_coding');
         } else {
             // Both finished
+            if (window.athena?.stopTimerOnMain) {
+                window.athena.stopTimerOnMain();
+            }
             setStage('exam_submitted');
         }
     }
@@ -248,7 +265,14 @@ export default function App() {
     }
 
     // Start Coding Section
-    function handleStartCoding() {
+    async function handleStartCoding() {
+        try {
+            if (window.athena?.startTimerOnMain) {
+                await window.athena.startTimerOnMain();
+            }
+        } catch (e) {
+            // non-fatal
+        }
         setStage('exam_coding');
     }
 
@@ -258,7 +282,10 @@ export default function App() {
         setCompletedSections(prev => new Set(prev).add('coding'));
 
         if (!completedSections.has('mcq') && selectedFirstSection === 'coding') {
-            // If they did coding first, now return to home screen for MCQs
+            // If they did coding first, stop timer and return to home screen for MCQs
+            if (window.athena?.stopTimerOnMain) {
+                window.athena.stopTimerOnMain();
+            }
             setStage('readiness_home');
             setSelectedFirstSection('mcq');
         } else {
