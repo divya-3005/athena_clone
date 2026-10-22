@@ -10,7 +10,49 @@
     "preview": "vite preview",
     "electron": "vite build && electron ./app/app.js",
     "start": "concurrently -k \"vite\" \"wait-on tcp:5173 && electron ./app/app.js\"",
-    "app": "concurrently -k \"vite\" \"wait-on tcp:5173 && electron ./app/app.js\""
+    "app": "concurrently -k \"vite\" \"wait-on tcp:5173 && electron ./app/app.js\"",
+    "dist": "vite build && electron-builder --mac dmg"
+  },
+  "build": {
+    "appId": "com.athena.proctoring",
+    "productName": "Athena",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "app/**/*",
+      "package.json"
+    ],
+    "mac": {
+      "category": "public.app-category.education",
+      "target": [
+        "dmg"
+      ],
+      "hardenedRuntime": false,
+      "gatekeeperAssess": false,
+      "identity": null,
+      "extendInfo": {
+        "NSCameraUsageDescription": "Athena requires camera access for secure candidate proctoring.",
+        "NSScreenCaptureUsageDescription": "Athena requires screen recording access for exam proctoring verification.",
+        "NSMicrophoneUsageDescription": "Athena proctoring verification."
+      }
+    },
+    "dmg": {
+      "title": "Athena Proctoring Platform",
+      "contents": [
+        {
+          "x": 130,
+          "y": 220
+        },
+        {
+          "x": 410,
+          "y": 220,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ]
+    }
   },
   "dependencies": {
     "lucide-react": "^1.16.0",
@@ -21,6 +63,7 @@
     "@vitejs/plugin-react": "^4.3.4",
     "concurrently": "^9.1.2",
     "electron": "^33.2.1",
+    "electron-builder": "^26.15.3",
     "vite": "^6.0.7",
     "wait-on": "^8.0.2"
   }

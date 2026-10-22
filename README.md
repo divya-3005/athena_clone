@@ -78,19 +78,39 @@ athena_clone/
 
 ## 🚀 Getting Started
 
-### 1. Install Dependencies
+### Option 1: Instant Launch (Zero Setup Required)
+For immediate evaluation without installing Node dependencies or manually configuring permissions:
+
+- **Via Finder**: Double-click [run_athena.command](file:///Users/divyasingh1/athena_clone/run_athena.command). It automatically removes macOS Gatekeeper quarantine and launches Athena directly.
+- **Via Terminal**:
+  ```bash
+  ./run_athena.command
+  ```
+
+---
+
+### Option 2: Running from the Standalone Executable DMG
+If you have the compiled disk image:
 ```bash
-npm install
+# Mount DMG, bypass Gatekeeper, and launch Athena in one command
+hdiutil attach release/Athena-1.0.0-arm64.dmg && xattr -cr "/Volumes/Athena Proctoring Platform/Athena.app" && open "/Volumes/Athena Proctoring Platform/Athena.app"
 ```
 
-### 2. Run the Desktop App
+---
+
+### Option 3: Developer Setup (From Source)
+
 ```bash
-# Option A: One-step dev launch (starts Vite dev server and opens Electron)
+# 1. Install dependencies
+npm install
+
+# 2. Run in development mode (launches Vite + Electron)
 npm start
 
-# Option B: Build and launch Electron app
-npm run electron
+# 3. Build the production DMG installer
+npm run dist
 ```
+The output executable will be placed in `release/Athena-1.0.0-arm64.dmg`.
 
 ---
 

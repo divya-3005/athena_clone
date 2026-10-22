@@ -1,8 +1,16 @@
 // app/app.js
-import { app, BrowserWindow, ipcMain, dialog, Menu, desktopCapturer, session } from "electron";
+import { app, BrowserWindow, ipcMain, dialog, Menu, desktopCapturer, session, shell } from "electron";
 import path from "path";
 import fs from "fs";
 import { spawn } from "child_process";
+
+// Ensure standard macOS Python paths are present in GUI environment
+const standardMacPaths = ["/opt/homebrew/bin", "/usr/local/bin", "/usr/bin", "/bin"];
+const currentPath = process.env.PATH || "";
+const missingPaths = standardMacPaths.filter(p => !currentPath.includes(p));
+if (missingPaths.length > 0) {
+    process.env.PATH = `${currentPath}:${missingPaths.join(":")}`;
+}
 
 let electronWindow = null;
 let startTimestamp = null;
@@ -13,8 +21,13 @@ let isExamActive = false;
 const sessionViolations = [];
 
 // Feature: Screen Preview Capture + Camera Snap — output folders
-const CAMERA_SNAP_DIR = path.join(import.meta.dirname, "user-camera-snap");
-const SCREEN_SNAP_DIR = path.join(import.meta.dirname, "user-screen-snap");
+// In packaged mode, write to writable user data folder; in dev, write to project app folder
+const baseStorageDir = app.isPackaged
+    ? path.join(app.getPath("userData"), "proctoring-data")
+    : import.meta.dirname;
+
+const CAMERA_SNAP_DIR = path.join(baseStorageDir, "user-camera-snap");
+const SCREEN_SNAP_DIR = path.join(baseStorageDir, "user-screen-snap");
 
 for (const dir of [CAMERA_SNAP_DIR, SCREEN_SNAP_DIR]) {
     if (!fs.existsSync(dir)) {
@@ -39,9 +52,17 @@ function createWindow() {
         }
     });
 
+    // Auto-grant media and camera permissions within Chromium layer
+    session.defaultSession.setPermissionRequestHandler((_webContents, permission, callback) => {
+        callback(true);
+    });
+    session.defaultSession.setPermissionCheckHandler(() => true);
+
     electronWindow.webContents.on('did-fail-load', (_event, errorCode, errorDescription, validatedURL) => {
         console.error(`[Athena Main] did-fail-load: ${validatedURL} [${errorCode}] ${errorDescription}`);
-        const distPath = path.join(import.meta.dirname, "../dist/index.html");
+        const distPath = app.isPackaged
+            ? path.join(app.getAppPath(), "dist/index.html")
+            : path.join(import.meta.dirname, "../dist/index.html");
         if (validatedURL.startsWith("http://") && fs.existsSync(distPath)) {
             console.log("[Athena Main] Falling back to local dist/index.html");
             electronWindow.loadFile(distPath);
@@ -68,20 +89,27 @@ function createWindow() {
         { useSystemPicker: true }
     );
 
-    // Try loading Vite dev server first; fall back to dist/index.html if offline/packaged
-    const devServerUrl = "http://localhost:5173";
-    const distPath = path.join(import.meta.dirname, "../dist/index.html");
-    fetch(devServerUrl, { signal: AbortSignal.timeout(1200) })
-        .then(() => {
-            electronWindow.loadURL(devServerUrl);
-        })
-        .catch(() => {
-            if (fs.existsSync(distPath)) {
-                electronWindow.loadFile(distPath);
-            } else {
+    // In packaged mode, load the bundled dist/index.html directly
+    if (app.isPackaged) {
+        const distPath = path.join(app.getAppPath(), "dist/index.html");
+        console.log(`[Athena Packaged] Loading local production bundle: ${distPath}`);
+        electronWindow.loadFile(distPath);
+    } else {
+        // Dev mode: try Vite dev server first, fall back to dist/index.html
+        const devServerUrl = "http://localhost:5173";
+        const distPath = path.join(import.meta.dirname, "../dist/index.html");
+        fetch(devServerUrl, { signal: AbortSignal.timeout(1200) })
+            .then(() => {
                 electronWindow.loadURL(devServerUrl);
-            }
-        });
+            })
+            .catch(() => {
+                if (fs.existsSync(distPath)) {
+                    electronWindow.loadFile(distPath);
+                } else {
+                    electronWindow.loadURL(devServerUrl);
+                }
+            });
+    }
 
     // Feature: Disable Ctrl/Cmd + C and intercept shortcuts with native warning
     electronWindow.webContents.on("before-input-event", (event, input) => {

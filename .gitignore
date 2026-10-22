@@ -6,6 +6,7 @@ node_modules/
 dist/
 dist-electron/
 out/
+release/
 
 # Proctoring capture output directories
 app/user-camera-snap/*.jpg
