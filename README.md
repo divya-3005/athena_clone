@@ -30,7 +30,7 @@ A modern, high-integrity assessment desktop application built with **Electron**,
   - **Print Logs Capture**: Automatically captures and displays candidate `print(...)` statements without corrupting execution results.
 
 ### 4. Automated Proctoring & Anti-Cheating
-- **Active-Only Surveillance**: Camera and desktop screen snapshots are archived to `app/user-camera-snap/` and `app/user-screen-snap/` **only while actively taking an exam**—zero unnecessary data on landing screens.
+- **Active-Only Surveillance**: Camera and desktop screen snapshots are archived to `~/Desktop/Athena_Proctoring_Data/` (`user-camera-snap/` and `user-screen-snap/`) **only while actively taking an exam** (with candidate consent)—zero unnecessary data on landing screens.
 - **Keystroke & Shortcut Interception**: Intercepts `Ctrl+C` and `Cmd+C` with native Electron dialog warnings and logs violation telemetry. `Ctrl/Cmd+V` paste is disabled.
 - **Context Menu Lockdown**: Right-click context menu is disabled across the entire window.
 - **Fullscreen Departure Guard**: Exiting fullscreen triggers a modal alert and violation flag.
@@ -49,9 +49,7 @@ A modern, high-integrity assessment desktop application built with **Electron**,
 athena_clone/
 ├── app/
 │   ├── app.js               # Electron main process (lifecycle, IPC, Python runner, anti-cheat)
-│   ├── preload.js           # Secure contextBridge API bridge (window.athena)
-│   ├── user-camera-snap/    # Archived surveillance webcam snapshots (.jpg)
-│   └── user-screen-snap/    # Archived desktop screen captures (.png)
+│   └── preload.js           # Secure contextBridge API bridge (window.athena)
 ├── src/
 │   ├── components/
 │   │   ├── Header.jsx               # Top navigation bar with timer and exit button
@@ -89,8 +87,8 @@ For immediate evaluation without installing Node dependencies or manually config
 
 ---
 
-### Option 2: Running from the Executable DMG (`Athena.dmg`)
-The executable disk image is located in `release/Athena.dmg` (**5.4 MB**, well under the 50 MB portal upload limit).
+### Option 2: Running from the Standalone Executable DMG (`Athena.dmg`)
+The standalone offline disk image is located in `release/Athena.dmg` (**93 MB**, containing the full self-contained 239 MB `Athena.app` with embedded Chromium and Node runtime):
 
 ```bash
 # Clear Gatekeeper quarantine and launch in one step:
