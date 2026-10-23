@@ -27,6 +27,7 @@
     "mac": {
       "icon": "build/icon.icns",
       "category": "public.app-category.education",
+      "artifactName": "Athena.dmg",
       "target": [
         "dmg"
       ],
