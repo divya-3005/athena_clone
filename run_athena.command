@@ -48,7 +48,7 @@ elif [ -f "$DMG_PATH" ] || [ -f "$DMG_LOCAL" ]; then
 fi
 
 if [ -z "$TARGET_APP" ] || [ ! -d "$TARGET_APP" ]; then
-    echo "❌ Error: Could not locate Athena.app or Athena-1.0.0-arm64.dmg."
+    echo "❌ Error: Could not locate Athena.app or Athena.dmg."
     echo "Please ensure the DMG or Athena.app is in this folder."
     exit 1
 fi
